@@ -1,22 +1,35 @@
 using Microsoft.AspNetCore.Mvc;
 using SportsStore.Models;
+using SportsStore.Models.ViewModels;
+using SportsStore.Repositories;
 using System.Diagnostics;
 
 namespace SportsStore.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly IStoreRepository repository;
+        public int PageSize = 4;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(IStoreRepository repository)
         {
-            _logger = logger;
+            this.repository = repository;
         }
 
-        public IActionResult Index()
-        {
-            return View();
-        }
+        public ViewResult Index(int productPage = 1)
+            => View(new ProductsListViewModel
+            {
+                Products = repository.Products
+                .OrderBy(p => p.Id)
+                .Skip((productPage - 1) * PageSize)
+                .Take(PageSize),
+                PagingInfo = new PagingInfo
+                {
+                    CurrentPage = productPage,
+                    ItemsPerPage = PageSize,
+                    TotalItems = repository.Products.Count()
+                }
+            });
 
         public IActionResult Privacy()
         {
